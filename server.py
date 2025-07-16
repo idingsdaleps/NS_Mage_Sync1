@@ -12,8 +12,7 @@ import schedule
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-
-
+"""
 mage_auth = OAuth1(
     client_key=params.MAGE_CONSUMER_KEY,
     client_secret=params.MAGE_CONSUMER_SECRET,
@@ -30,6 +29,8 @@ ns_auth = OAuth1(
     realm=params.NS_REALM,
     signature_method="HMAC-SHA256",
 )
+
+"""
 
 mage_headers = {"Content-Type": "application/json"}
 ns_headers = {"Content-Type": "application/json", "prefer": "transient"}
