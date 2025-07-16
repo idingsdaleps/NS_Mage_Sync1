@@ -30,7 +30,7 @@ ns_auth = OAuth1(
     signature_method="HMAC-SHA256",
 )
 
-"""
+
 
 mage_headers = {"Content-Type": "application/json"}
 ns_headers = {"Content-Type": "application/json", "prefer": "transient"}
@@ -162,15 +162,12 @@ def processCosts():
         print("Upload UUID " + upload_uuid)
     else :
         print("No new costs to upload!")
-
+"""
 
 
 print("NS Mage Sync app started, loading schedules...")
 print(os.environ)
-schedule.every().day.at("20:30").do(processCosts)
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+
 
 
 
