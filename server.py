@@ -9,24 +9,22 @@ import pandas as pd
 from datetime import datetime, timedelta
 from alive_progress import alive_bar
 import schedule 
-import logging
 
-logging.basicConfig(level=logging.DEBUG)
-"""
+
 mage_auth = OAuth1(
-    client_key=params.MAGE_CONSUMER_KEY,
-    client_secret=params.MAGE_CONSUMER_SECRET,
-    resource_owner_key=params.MAGE_TOKEN_ID,
-    resource_owner_secret=params.MAGE_TOKEN_SECRET,
+    client_key=os.environ['MAGE_CONSUMER_KEY'],
+    client_secret=os.environ['MAGE_CONSUMER_SECRET'],
+    resource_owner_key=os.environ['MAGE_TOKEN_ID'],
+    resource_owner_secret=os.environ['MAGE_TOKEN_SECRET'],
     signature_method="HMAC-SHA256",
 )
 
 ns_auth = OAuth1(
-    client_key=params.NS_CONSUMER_KEY,
-    client_secret=params.NS_CONSUMER_SECRET,
-    resource_owner_key=params.NS_TOKEN_ID,
-    resource_owner_secret=params.NS_TOKEN_SECRET,
-    realm=params.NS_REALM,
+    client_key=os.environ['NS_CONSUMER_KEY'],
+    client_secret=os.environ['NS_CONSUMER_SECRET'],
+    resource_owner_key=os.environ['NS_TOKEN_ID'],
+    resource_owner_secret=os.environ['NS_TOKEN_SECRET'],
+    realm=os.environ['NS_REALM'],
     signature_method="HMAC-SHA256",
 )
 
@@ -41,7 +39,7 @@ def getMissingCosts():
     lastPage = False
     all_missing_df = pd.DataFrame()
     while lastPage == False:
-        ALLPRODUCTS_URL = params.MAGE_URL + "/rest/V1/products/?searchCriteria[filter_groups][1][filters][0][field]=cost&searchCriteria[filter_groups][1][filters][0][condition_type]=null&searchCriteria[filter_groups][2][filters][0][field]=status&searchCriteria[filter_groups][2][filters][0][condition_type]=eq&searchCriteria[filter_groups][2][filters][0][value]=1&fields=items[sku,id]&searchCriteria[page_size]=500&searchCriteria[currentPage]=" + str(currentPage)
+        ALLPRODUCTS_URL = os.environ['MAGE_URL'] + "/rest/V1/products/?searchCriteria[filter_groups][1][filters][0][field]=cost&searchCriteria[filter_groups][1][filters][0][condition_type]=null&searchCriteria[filter_groups][2][filters][0][field]=status&searchCriteria[filter_groups][2][filters][0][condition_type]=eq&searchCriteria[filter_groups][2][filters][0][value]=1&fields=items[sku,id]&searchCriteria[page_size]=500&searchCriteria[currentPage]=" + str(currentPage)
         products_response = requests.request("GET", ALLPRODUCTS_URL, auth=mage_auth, headers=mage_headers)
         products_data = json.loads(products_response.text)
         product_paged_df = pd.json_normalize(products_data,"items")
@@ -68,7 +66,7 @@ def getNSCosts():
 
     while lastPage == False:
 
-        NS_QUERY_URL = params.NS_URL + "services/rest/query/v1/suiteql?limit=1000&offset=" + str(offset)
+        NS_QUERY_URL = os.environ['NS_URL'] + "services/rest/query/v1/suiteql?limit=1000&offset=" + str(offset)
         NS_QUERY = {"q": "select itemid, round(lastpurchaseprice,2) as lastpurchaseprice from item where isOnline = 'T' and itemType = 'InvtPart'"}
         costs_response = requests.post(NS_QUERY_URL, auth=ns_auth, headers=ns_headers, json=NS_QUERY)
         costs_data = json.loads(costs_response.text)
@@ -92,7 +90,7 @@ def getNSKitCosts():
     all_costs_df = pd.DataFrame()
     while lastPage == False:
 
-        NS_QUERY_URL = params.NS_URL + "services/rest/query/v1/suiteql?limit=1000&offset=" + str(offset)
+        NS_QUERY_URL = os.environ['NS_URL'] + "services/rest/query/v1/suiteql?limit=1000&offset=" + str(offset)
         NS_QUERY = {"q": "select itemid, sum(lastpurchaseprice) as lastpurchaseprice from (select i.itemid, ic.itemid as component_id, ic.lastpurchaseprice from item i right join itemmember im on i.id = im.parentitem right join item ic on im.item = ic.id where i.itemType = 'Kit' and i.isOnline = 'T') group by itemid"}        
         costs_response = requests.post(NS_QUERY_URL, auth=ns_auth, headers=ns_headers, json=NS_QUERY)
         costs_data = json.loads(costs_response.text)
@@ -129,7 +127,7 @@ def generateCostJSON(costs_df):
 
 
 def getUploadProcess(bulk_uuid):
-    STATUS_URL = params.MAGE_URL + "/rest/V1/bulk/" + bulk_uuid + "/status"
+    STATUS_URL = os.environ['MAGE_URL'] + "/rest/V1/bulk/" + bulk_uuid + "/status"
     status_response = requests.request("GET", STATUS_URL, auth=mage_auth, headers=mage_headers)
     status_data = json.loads(status_response.text)
     status_data_df = pd.json_normalize(status_data,"operations_list")
@@ -154,7 +152,7 @@ def processCosts():
         print("Uploading " + str(filtered_costs.shape[0]) + " cost records")
         #Generate upload JSON body from table
         upload_body = generateCostJSON(filtered_costs)
-        MAGE_UPLOAD_URL = params.MAGE_URL + "/rest/async/bulk/V1/products"
+        MAGE_UPLOAD_URL = os.environ['MAGE_URL'] + "/rest/async/bulk/V1/products"
         #Post to Magento API
         upload_response = requests.post(MAGE_UPLOAD_URL, auth=mage_auth, headers=mage_headers, json=upload_body)
         upload_response_body = json.loads(upload_response.text)
@@ -162,7 +160,7 @@ def processCosts():
         print("Upload UUID " + upload_uuid)
     else :
         print("No new costs to upload!")
-"""
+
 
 
 print("NS Mage Sync app started, loading schedules...")
