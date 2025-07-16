@@ -9,6 +9,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 from alive_progress import alive_bar
 import schedule 
+import http.server
+import socketserver
+from http import HTTPStatus
 
 
 mage_auth = OAuth1(
@@ -27,6 +30,13 @@ ns_auth = OAuth1(
     realm=os.environ['NS_REALM'],
     signature_method="HMAC-SHA256",
 )
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(HTTPStatus.OK)
+        self.end_headers()
+        msg = 'Hello! you requested %s' % (self.path)
+        self.wfile.write(msg.encode())
 
 
 
@@ -162,6 +172,10 @@ def processCosts():
         print("No new costs to upload!")
 
 
+port = int(os.getenv('PORT', 8080))
+print('Listening on port %s' % (port))
+httpd = socketserver.TCPServer(('', port), Handler)
+httpd.serve_forever()
 
 print("NS Mage Sync app started, loading schedules...")
 print(os.environ)
