@@ -4,7 +4,6 @@ import sys
 import glob
 import time
 import os
-import params
 import json
 import pandas as pd
 from datetime import datetime, timedelta
